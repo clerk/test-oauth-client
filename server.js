@@ -16,7 +16,7 @@ const tokens = {}; // in memory store because thats how the real pros do it
 const params = {
 	response_type: "code",
 	client_id: process.env.CLIENT_ID,
-	redirect_uri: `http://localhost:${PORT}/callback`,
+	redirect_uri: `http://localhost:${PORT}/oauth_callback`,
 	scope: "email profile",
 	state,
 };
@@ -25,7 +25,7 @@ console.log("Opening initial authorization url in browser...")
 open(`${fapiUrl}/oauth/authorize?${qs.stringify(params)}`)
 
 // hit this endpoint to exchange the code for an access token
-app.get("/callback", async (req, res) => {
+app.get("/oauth_callback", async (req, res) => {
     const { code, state: callbackState } = qs.parse(req.query)
 
     if (callbackState !== state) {
@@ -42,7 +42,7 @@ app.get("/callback", async (req, res) => {
             client_secret: process.env.CLIENT_SECRET,
             code,
             grant_type: "authorization_code",
-            redirect_uri: `http://localhost:${PORT}/callback`,
+            redirect_uri: `http://localhost:${PORT}/oauth_callback`,
         }),
     })
     .then((res) => res.json())
@@ -67,7 +67,7 @@ app.get("/refresh", async (_, res) => {
             client_secret: process.env.CLIENT_SECRET,
             refresh_token: tokens.refreshToken,
             grant_type: "refresh_token",
-            redirect_uri: `http://localhost:${PORT}/callback`,
+            redirect_uri: `http://localhost:${PORT}/oauth_callback`,
         }),
     })
     .then((res) => res.json())
