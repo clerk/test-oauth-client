@@ -1,5 +1,5 @@
 {
-  "name": "clerk-oauth-test",
+  "name": "clerk-oauth-test-client",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
@@ -7,7 +7,7 @@
     "start": "node server.js"
   },
   "author": "Jeff Escalante",
-  "description": "A simple example of how to use Clerk's OAuth endpoints",
+  "description": "A simple example of an OAuth client that uses Clerk's OAuth endpoints",
   "dependencies": {
     "dotenv": "^16.4.7",
     "express": "^5.1.0",

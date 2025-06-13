@@ -9,6 +9,7 @@ dotenv.config();
 const PORT = process.env.PORT || 3000;
 const state = shortid.generate();
 const app = express();
+const fapiUrl = deriveFapiUrl(process.env.CLERK_PUBLISHABLE_KEY);
 const tokens = {}; // in memory store because thats how the real pros do it
 
 // Log out the initial authorization url to get the flow started
@@ -16,12 +17,12 @@ const params = {
 	response_type: "code",
 	client_id: process.env.CLIENT_ID,
 	redirect_uri: `http://localhost:${PORT}/callback`,
-	scope: "openid email profile",
+	scope: "email profile",
 	state,
 };
 
 console.log("Opening initial authorization url in browser...")
-open(`${process.env.FAPI_URL}/oauth/authorize?${qs.stringify(params)}`)
+open(`${fapiUrl}/oauth/authorize?${qs.stringify(params)}`)
 
 // hit this endpoint to exchange the code for an access token
 app.get("/callback", async (req, res) => {
@@ -31,7 +32,7 @@ app.get("/callback", async (req, res) => {
         return res.status(400).send("State param mismatch")
     }
 
-    const response = await fetch(`${process.env.FAPI_URL}/oauth/token`, {
+    const response = await fetch(`${fapiUrl}/oauth/token`, {
         method: "POST",
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -56,7 +57,7 @@ app.get("/callback", async (req, res) => {
 
 // hit this endpoint to refresh the access token
 app.get("/refresh", async (_, res) => {
-    const response = await fetch(`${process.env.FAPI_URL}/oauth/token`, {
+    const response = await fetch(`${fapiUrl}/oauth/token`, {
         method: "POST",
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -80,7 +81,7 @@ app.get("/refresh", async (_, res) => {
 
 // get user info given an access token
 app.get("/userinfo", async (_, res) => {
-    const response = await fetch(`${process.env.FAPI_URL}/oauth/userinfo`, {
+    const response = await fetch(`${fapiUrl}/oauth/userinfo`, {
         headers: {
             'Authorization': `Bearer ${tokens.accessToken}`,
         },
@@ -93,7 +94,7 @@ app.get("/userinfo", async (_, res) => {
 
 // get refresh token info
 app.get("/tokeninfo", async (_, res) => {
-    const response = await fetch(`${process.env.FAPI_URL}/oauth/token_info`, {
+    const response = await fetch(`${fapiUrl}/oauth/token_info`, {
         method: "POST",
         headers: {
             'Authorization': `Bearer ${tokens.accessToken}`,
@@ -113,3 +114,10 @@ app.get("/tokeninfo", async (_, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
+// clerk utility function
+function deriveFapiUrl(publishableKey) {
+    const key = publishableKey.replace(/^pk_(test|live)_/, "");
+    const decoded = Buffer.from(key, "base64").toString("utf8");
+    return "https://" + decoded.replace(/\$/, "");
+}
