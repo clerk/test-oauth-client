@@ -1,6 +1,6 @@
 # Minimal OAuth Test Client
 
-This is just about the most minimalistic OAuth client possible. It's intended for use in testing Clerk's OAuth server endpoints.
+This is just about the most minimalistic OAuth client possible. It's intended for use in testing Clerk's OAuth server endpoints. The authorization code flow uses PKCE with the `S256` challenge method.
 
 ### To get it going
 
