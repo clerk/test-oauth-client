@@ -3,11 +3,16 @@ import qs from "qs";
 import dotenv from "dotenv";
 import shortid from "shortid";
 import open from "open";
+import { createHash, randomBytes } from "node:crypto";
 
 dotenv.config();
 
 const PORT = process.env.PORT || 3000;
 const state = shortid.generate();
+const codeVerifier = randomBytes(32).toString("base64url");
+const codeChallenge = createHash("sha256")
+    .update(codeVerifier)
+    .digest("base64url");
 const app = express();
 const fapiUrl = deriveFapiUrl(process.env.CLERK_PUBLISHABLE_KEY);
 const tokens = {}; // in memory store because thats how the real pros do it
@@ -19,6 +24,8 @@ const params = {
 	redirect_uri: `http://localhost:${PORT}/oauth_callback`,
 	scope: "email profile",
 	state,
+	code_challenge: codeChallenge,
+	code_challenge_method: "S256",
 };
 
 console.log("Opening initial authorization url in browser...")
@@ -41,6 +48,7 @@ app.get("/oauth_callback", async (req, res) => {
             client_id: process.env.CLIENT_ID,
             client_secret: process.env.CLIENT_SECRET,
             code,
+            code_verifier: codeVerifier,
             grant_type: "authorization_code",
             redirect_uri: `http://localhost:${PORT}/oauth_callback`,
         }),
